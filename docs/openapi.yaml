@@ -1,0 +1,115 @@
+openapi: "3.0.3"
+info:
+  title: Aiform API
+  description: API for contact form submissions with AI analysis
+  version: "0.1.0"
+servers:
+  - url: http://localhost:8080/api
+    description: Local dev
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /metrics:
+    get:
+      summary: Service metrics
+      operationId: metrics
+      responses:
+        "200":
+          description: Metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetricsResponse"
+  /contact:
+    post:
+      summary: Submit contact request
+      operationId: submitContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactInput"
+      responses:
+        "201":
+          description: Contact request accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactResponse"
+        "422":
+          description: Validation error
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: aiform
+        timestamp:
+          type: string
+    MetricsResponse:
+      type: object
+      properties:
+        uptime_seconds:
+          type: integer
+        php_version:
+          type: string
+        memory_usage_mb:
+          type: number
+        contact_requests_total:
+          type: integer
+    ContactInput:
+      type: object
+      required: [name, phone, email, comment]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          example: Иван Петров
+        phone:
+          type: string
+          maxLength: 30
+          example: "+7 (999) 123-45-67"
+        email:
+          type: string
+          format: email
+          maxLength: 150
+        comment:
+          type: string
+          maxLength: 2000
+    ContactResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        id:
+          type: integer
+        ai_analysis:
+          $ref: "#/components/schemas/AiAnalysis"
+    AiAnalysis:
+      type: object
+      properties:
+        category:
+          type: string
+        sentiment:
+          type: string
+        priority:
+          type: string
+        summary:
+          type: string
+        ai_available:
+          type: boolean
