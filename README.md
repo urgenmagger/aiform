@@ -80,6 +80,14 @@ npm run dev
 | `DB_USERNAME` | Пользователь БД | aiform |
 | `DB_PASSWORD` | Пароль БД | secret |
 | `FRONTEND_PORT` | Порт Vite dev-сервера | 5173 |
+| `MAIL_MAILER` | Драйвер отправки (smtp/log) | log |
+| `MAIL_HOST` | SMTP-хост | — |
+| `MAIL_PORT` | SMTP-порт | 587 |
+| `MAIL_USERNAME` | SMTP-логин | — |
+| `MAIL_PASSWORD` | SMTP-пароль | — |
+| `MAIL_ENCRYPTION` | SMTP-шифрование | tls |
+| `MAIL_FROM_ADDRESS` | Обратный адрес | noreply@aiform.local |
+| `CONTACT_OWNER_EMAIL` | Email владельца для уведомлений | — |
 
 ## Endpoints
 
@@ -122,7 +130,7 @@ npm run dev
 - [x] Валидация ContactFormRequest (name, phone, email, comment)
 - [x] Сохранение обращений в PostgreSQL (миграция `contact_requests`)
 - [x] Заглушка AiAnalysisService (возвращает фиктивные данные)
-- [x] Заглушка ContactMailService (пишет в лог вместо отправки)
+- [x] Реальная email-отправка (ContactOwnerMail, ContactUserCopyMail)
 - [x] Middleware ApiRequestLogger (логирует method, path, status, ip, duration)
 - [x] React/Vite frontend с формой (react-hook-form + zod)
 - [x] Docker Compose (Laravel + PostgreSQL + React)
@@ -131,10 +139,57 @@ npm run dev
 ## Что осталось реализовать (следующие этапы)
 
 - [ ] Подключение реального DeepSeek AI в `AiAnalysisService`
-- [ ] Реальная email-отправка (SMTP/Resend/Mailgun) в `ContactMailService`
 - [ ] Swagger UI / Scalar для документации API
 - [ ] Админка (Filament/Nova) для просмотра обращений
 - [ ] Авторизация (Sanctum)
 - [ ] Очереди (Redis + Laravel Horizon) для AI и email
 - [ ] Деплой на VPS (Docker Compose + Caddy/nginx)
 - [ ] Тесты (PHPUnit)
+
+## Настройка email
+
+В `.env` (backend) заполните:
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.example.com
+MAIL_PORT=587
+MAIL_USERNAME=user@example.com
+MAIL_PASSWORD=app-password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=noreply@example.com
+MAIL_FROM_NAME="Aiform"
+
+CONTACT_OWNER_EMAIL=owner@example.com
+```
+
+### Проверка через curl
+
+```bash
+curl -X POST http://localhost:8080/api/contact \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Тест","phone":"+79991234567","email":"test@example.com","comment":"Тестовое обращение"}'
+```
+
+Ответ:
+```json
+{
+  "success": true,
+  "message": "Contact request accepted",
+  "id": 1,
+  "ai_analysis": {...},
+  "mail_sent": true
+}
+```
+
+### Поведение при ошибке SMTP
+
+- Обращение сохраняется в БД всегда (до отправки email)
+- Ошибка отправки логируется в `storage/logs/laravel.log`
+- `mail_sent: false` в ответе — email не ушёл, но contact сохранён
+- HTTP-статус: 201 (успех) в любом случае
+
+### Локальная разработка (без SMTP)
+
+По умолчанию `MAIL_MAILER=log` — письма пишутся в `storage/logs/laravel.log` вместо реальной отправки.
+Для проверки логики без SMTP-сервера этого достаточно.

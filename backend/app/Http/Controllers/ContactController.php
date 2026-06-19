@@ -17,9 +17,11 @@ class ContactController
         $result = $this->contactService->handle($request->validated(), $request->ip(), $request->userAgent());
 
         return response()->json([
+            'success' => true,
             'message' => 'Contact request accepted',
             'id' => $result['id'],
             'ai_analysis' => $result['ai_analysis'],
+            'mail_sent' => $result['mail_sent'],
         ], 201);
     }
 }

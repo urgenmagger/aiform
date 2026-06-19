@@ -32,12 +32,14 @@ class ContactService
             'ai_available' => $aiResult['ai_available'],
         ]);
 
-        $this->mailService->sendOwnerNotification($contact);
-        $this->mailService->sendUserCopy($contact);
+        $mailStatus = $this->mailService->sendAll($contact);
+
+        $mailSent = $mailStatus['owner'] || $mailStatus['user'];
 
         return [
             'id' => $contact->id,
             'ai_analysis' => $aiResult,
+            'mail_sent' => $mailSent,
         ];
     }
 }
