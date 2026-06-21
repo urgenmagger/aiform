@@ -8,6 +8,7 @@ Backend-ориентированное приложение на Laravel + React
 Открыть в браузере и заполнить форму:
 
 **[api.urgenmagger.ru](http://api.urgenmagger.ru)**
+
 После отправки под формой появится карточка с AI-анализом (категория, тональность, приоритет, summary).
 
 ### API (curl)
@@ -220,6 +221,18 @@ done
 - [x] Docker Compose (Laravel + PostgreSQL + React)
 - [x] OpenAPI-спецификация (`docs/openapi.yaml`)
 - [x] Деплой на VPS с Caddy (Docker Compose + reverse proxy)
+
+## Хранение данных
+
+| Данные | Где хранится |
+|---|---|
+| Обращения (contact requests) | PostgreSQL (таблица `contact_requests`, миграция) |
+| Логи запросов | `storage/logs/laravel.log` (LOG_CHANNEL=single) |
+| Статистика | `GET /api/metrics` — агрегируется из БД (`count(*)`) и PHP-рантайма |
+| Rate limiting | Файловый кеш (`CACHE_DRIVER=file`, ключ `contact-form:{ip}`) |
+| Конфигурация | `.env` + `config/*.php` |
+
+База данных используется для демонстрации навыков работы с БД. Для rate limiting и кеша — файловая система через стандартный `Cache` facade.
 
 ## AI Integration
 
