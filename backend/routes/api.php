@@ -5,9 +5,10 @@ use App\Http\Controllers\HealthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\MetricsController;
 use App\Http\Middleware\ApiRequestLogger;
+use App\Http\Middleware\ContactRateLimitMiddleware;
 
 Route::middleware([ApiRequestLogger::class])->group(function () {
     Route::get('/health', [HealthController::class, 'check']);
     Route::get('/metrics', [MetricsController::class, 'index']);
-    Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:contact');
+    Route::post('/contact', [ContactController::class, 'store'])->middleware(ContactRateLimitMiddleware::class);
 });

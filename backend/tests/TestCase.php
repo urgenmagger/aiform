@@ -30,6 +30,7 @@ abstract class TestCase extends BaseTestCase
             'SESSION_DRIVER' => 'array',
             'CONTACT_OWNER_EMAIL' => 'owner@example.com',
             'CONTACT_RATE_LIMIT' => '2',
+            'CONTACT_RATE_WINDOW_SECONDS' => '60',
         ];
 
         foreach ($vars as $key => $value) {

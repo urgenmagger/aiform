@@ -125,7 +125,7 @@ class ContactApiTest extends TestCase
 
     public function test_contact_form_enforces_rate_limit(): void
     {
-        $limit = (int) env('CONTACT_RATE_LIMIT', 2);
+        $limit = (int) config('contact.rate_limit.limit', 2);
 
         for ($i = 0; $i < $limit; $i++) {
             $response = $this->postJson('/api/contact', $this->validPayload);
@@ -133,7 +133,11 @@ class ContactApiTest extends TestCase
         }
 
         $response = $this->postJson('/api/contact', $this->validPayload);
-        $response->assertStatus(429);
+        $response->assertStatus(429)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Too many contact requests. Please try again later.',
+            ]);
     }
 
     public function test_contact_form_rejects_empty_json(): void

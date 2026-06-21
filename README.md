@@ -88,6 +88,9 @@ npm run dev
 | `MAIL_ENCRYPTION` | SMTP-шифрование | tls |
 | `MAIL_FROM_ADDRESS` | Обратный адрес | noreply@aiform.local |
 | `CONTACT_OWNER_EMAIL` | Email владельца для уведомлений | — |
+| `CONTACT_RATE_LIMIT` | Макс. запросов к /api/contact в окне | 5 |
+| `CONTACT_RATE_WINDOW_SECONDS` | Окно rate limiting в секундах | 60 |
+| `CACHE_DRIVER` | Драйвер кеша (file/database/array) | file |
 
 ## Endpoints
 
@@ -111,6 +114,7 @@ npm run dev
 Ответ 201:
 ```json
 {
+  "success": true,
   "message": "Contact request accepted",
   "id": 1,
   "ai_analysis": {
@@ -119,8 +123,35 @@ npm run dev
     "priority": "normal",
     "summary": "AI analysis stub",
     "ai_available": false
-  }
+  },
+  "mail_sent": true
 }
+```
+
+### Rate limiting
+
+`POST /api/contact` защищён rate limiter (middleware `ContactRateLimitMiddleware`).
+Лимит настраивается через `CONTACT_RATE_LIMIT` и `CONTACT_RATE_WINDOW_SECONDS`.
+Ключ — `contact-form:{ip}`, счётчик хранится в кеше (`CACHE_DRIVER`).
+
+При превышении возвращается 429:
+
+```json
+{
+  "success": false,
+  "message": "Too many contact requests. Please try again later."
+}
+```
+
+Проверка через curl:
+
+```bash
+for i in $(seq 1 6); do
+  curl -s -o /dev/null -w "Request $i: %{http_code}\n" \
+    -X POST http://localhost:8080/api/contact \
+    -H "Content-Type: application/json" \
+    -d '{"name":"Test","phone":"+79991234567","email":"test@test.com","comment":"Rate limit test"}'
+done
 ```
 
 ## Что уже сделано
@@ -132,6 +163,7 @@ npm run dev
 - [x] Заглушка AiAnalysisService (возвращает фиктивные данные)
 - [x] Реальная email-отправка (ContactOwnerMail, ContactUserCopyMail)
 - [x] Middleware ApiRequestLogger (логирует method, path, status, ip, duration)
+- [x] Middleware ContactRateLimitMiddleware (rate limiting для /api/contact)
 - [x] React/Vite frontend с формой (react-hook-form + zod)
 - [x] Docker Compose (Laravel + PostgreSQL + React)
 - [x] OpenAPI-черновик (`docs/openapi.yaml`)
