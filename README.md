@@ -2,6 +2,56 @@
 
 Backend-ориентированное приложение на Laravel + React для приёма контактных обращений с AI-анализом.
 
+## Проверяющему
+
+### Демо
+
+Открыть в браузере и заполнить форму:
+
+```
+http://api.urgenmagger.ru
+```
+
+После отправки под формой появится карточка с AI-анализом (категория, тональность, приоритет, summary).
+
+### API (curl)
+
+```bash
+# Health check
+curl http://api.urgenmagger.ru/api/health
+
+# Отправка формы (посмотреть AI-анализ в ответе)
+curl -X POST http://api.urgenmagger.ru/api/contact \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Иван","phone":"+79991234567","email":"ivan@example.com","comment":"Хочу интернет-магазин на Laravel"}'
+
+# Rate limit (первые 10 пройдут, потом 429)
+for i in 1 2 3 4 5; do
+  curl -s -o /dev/null -w "req $i: %{http_code}\n" \
+    -X POST http://api.urgenmagger.ru/api/contact \
+    -H "Content-Type: application/json" \
+    -d "{\"name\":\"T$i\",\"phone\":\"+7\",\"email\":\"t$i@t.com\",\"comment\":\"test\"}"
+done
+
+# OpenAPI
+curl http://api.urgenmagger.ru/docs/openapi.yaml
+# Открыть в Swagger Editor: https://editor.swagger.io
+```
+
+### Что оценить
+
+| Компонент | Где смотреть |
+|---|---|
+| Форма + AI | `http://api.urgenmagger.ru` — отправить обращение |
+| Валидация | Оставить пустые поля, невалидный email → 422 |
+| Rate limiting | 10 запросов подряд → 429 |
+| AI graceful fallback | `AI_ENABLED=false` в `.env` → `ai_available: false` |
+| Email-отправка | После отправки письмо владельцу + копия пользователю |
+| OpenAPI-документация | `http://api.urgenmagger.ru/docs/openapi.yaml` |
+| Тесты | `docker compose exec backend php vendor/bin/phpunit` (13 тестов) |
+| Логирование | `docker compose exec backend cat storage/logs/laravel.log` |
+| Код и архитектура | `backend/app/` — Controllers → Services → Models |
+
 ## Стек
 
 - **Backend:** Laravel 11, PHP 8.3
@@ -23,19 +73,19 @@ aiform/
 │   ├── app/
 │   │   ├── Http/
 │   │   │   ├── Controllers/    # ContactController, HealthController, MetricsController
-│   │   │   ├── Middleware/     # ApiRequestLogger
+│   │   │   ├── Middleware/     # ApiRequestLogger, ContactRateLimitMiddleware
 │   │   │   └── Requests/      # ContactFormRequest (валидация)
 │   │   ├── Models/            # ContactRequest (Eloquent)
-│   │   └── Services/          # ContactService, AiAnalysisService, ContactMailService
+│   │   └── Services/          # ContactService, ContactAiAnalysisService, ContactMailService
 │   ├── database/migrations/   # Миграции
 │   ├── routes/api.php         # API-маршруты
 │   └── Dockerfile
 └── frontend/                  # React + Vite
     └── src/
-        ├── components/        # ContactForm
+        ├── components/        # ContactForm, AiAnalysisCard
         ├── api/               # contactApi
         ├── schemas/           # Zod-схема валидации
-        └── types/
+        └── types/             # ContactPayload, ContactResponse, AiAnalysis
 ```
 
 ## Команды запуска
