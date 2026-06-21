@@ -5,13 +5,9 @@ Backend-ориентированное приложение на Laravel + React
 ## Как тестировать
 
 ### Демо
-
 Открыть в браузере и заполнить форму:
 
-```
-http://api.urgenmagger.ru
-```
-
+**[api.urgenmagger.ru](http://api.urgenmagger.ru)**
 После отправки под формой появится карточка с AI-анализом (категория, тональность, приоритет, summary).
 
 ### API (curl)
@@ -42,12 +38,12 @@ curl http://api.urgenmagger.ru/docs/openapi.yaml
 
 | Компонент | Где смотреть |
 |---|---|
-| Форма + AI | `http://api.urgenmagger.ru` — отправить обращение |
+| Форма + AI | [api.urgenmagger.ru](http://api.urgenmagger.ru) — отправить обращение |
 | Валидация | Оставить пустые поля, невалидный email → 422 |
 | Rate limiting | 10 запросов подряд → 429 |
 | AI graceful fallback | `AI_ENABLED=false` в `.env` → `ai_available: false` |
 | Email-отправка | После отправки письмо владельцу + копия пользователю |
-| OpenAPI-документация | `http://api.urgenmagger.ru/docs/openapi.yaml` |
+| OpenAPI-документация | [openapi.yaml](http://api.urgenmagger.ru/docs/openapi.yaml) |
 | Тесты | `docker compose exec backend php vendor/bin/phpunit` (13 тестов) |
 | Логирование | `docker compose exec backend cat storage/logs/laravel.log` |
 | Код и архитектура | `backend/app/` — Controllers → Services → Models |
@@ -494,13 +490,7 @@ Documented endpoints:
 - `GET /api/metrics` — uptime, php version, memory, contact requests count
 
 ## Demo
-
-Working deployment:
-
-```
-http://api.urgenmagger.ru
-```
-
+Working deployment: **[api.urgenmagger.ru](http://api.urgenmagger.ru)**
 ### API endpoints
 
 ```bash
