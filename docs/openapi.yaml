@@ -4,6 +4,8 @@ info:
   description: API for contact form submissions with AI analysis
   version: "0.1.0"
 servers:
+  - url: http://api.urgenmagger.ru/api
+    description: Live deployment
   - url: http://localhost:8080/api
     description: Local dev
 
@@ -77,7 +79,7 @@ paths:
                   category: other
                   sentiment: neutral
                   priority: normal
-                  summary: "AI analysis stub"
+                  summary: "AI analysis fallback"
                   ai_available: false
                 mail_sent: true
         "422":
@@ -219,7 +221,7 @@ components:
         summary:
           type: string
           description: AI-generated summary of the comment
-          example: "AI analysis stub"
+          example: "Пользователь хочет обсудить разработку CRM."
         ai_available:
           type: boolean
           description: Whether AI provider was reachable
