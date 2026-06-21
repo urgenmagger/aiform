@@ -4,7 +4,7 @@ Backend-ориентированное приложение на Laravel + React
 
 ## Quick test
 
-Live demo (frontend + API): **[api.urgenmagger.ru](http://api.urgenmagger.ru)**
+Live demo (frontend + API): **http://api.urgenmagger.ru**
 
 ```bash
 # Health check
@@ -31,7 +31,7 @@ curl http://api.urgenmagger.ru/docs/openapi.yaml   # Paste into https://editor.s
 
 | Component | How |
 |---|---|
-| Form + AI | Open [api.urgenmagger.ru](http://api.urgenmagger.ru), fill and submit |
+| Form + AI | Open http://api.urgenmagger.ru, fill and submit |
 | Validation | Empty fields, invalid email → 422 |
 | Rate limiting | 5 requests → 429 on 6th (env: `CONTACT_RATE_LIMIT=5`) |
 | AI graceful fallback | `AI_ENABLED=false` in `.env` → `ai_available: false` |
@@ -345,7 +345,7 @@ OpenAPI 3.0.3 spec: **[openapi.yaml](http://api.urgenmagger.ru/docs/openapi.yaml
 Paste the URL into [Swagger Editor](https://editor.swagger.io) to browse the full schema with examples.
 
 ## Deployment
-API is deployed at: **[api.urgenmagger.ru](http://api.urgenmagger.ru)**
+API is deployed at: **http://api.urgenmagger.ru**
 
 ### Infrastructure
 
