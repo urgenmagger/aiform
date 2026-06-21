@@ -91,6 +91,8 @@ npm run dev
 | `CONTACT_RATE_LIMIT` | Макс. запросов к /api/contact в окне | 5 |
 | `CONTACT_RATE_WINDOW_SECONDS` | Окно rate limiting в секундах | 60 |
 | `CACHE_DRIVER` | Драйвер кеша (file/database/array) | file |
+| `DEEPSEEK_API_KEY` | Ключ DeepSeek API | — |
+| `DEEPSEEK_BASE_URL` | Базовый URL DeepSeek API | https://api.deepseek.com |
 
 ## Endpoints
 
@@ -160,7 +162,7 @@ done
 - [x] Routes: `/api/health`, `/api/metrics`, `/api/contact`
 - [x] Валидация ContactFormRequest (name, phone, email, comment)
 - [x] Сохранение обращений в PostgreSQL (миграция `contact_requests`)
-- [x] Заглушка AiAnalysisService (возвращает фиктивные данные)
+- [x] AiAnalysisService с DeepSeek API (category, sentiment, priority, summary)
 - [x] Реальная email-отправка (ContactOwnerMail, ContactUserCopyMail)
 - [x] Middleware ApiRequestLogger (логирует method, path, status, ip, duration)
 - [x] Middleware ContactRateLimitMiddleware (rate limiting для /api/contact)
@@ -170,13 +172,29 @@ done
 
 ## Что осталось реализовать (следующие этапы)
 
-- [ ] Подключение реального DeepSeek AI в `AiAnalysisService`
 - [ ] Swagger UI / Scalar для документации API
 - [ ] Админка (Filament/Nova) для просмотра обращений
 - [ ] Авторизация (Sanctum)
 - [ ] Очереди (Redis + Laravel Horizon) для AI и email
 - [ ] Деплой на VPS (Docker Compose + Caddy/nginx)
-- [ ] Тесты (PHPUnit)
+## AI Integration
+
+AI-анализ комментариев через DeepSeek API (`deepseek-chat`).
+
+Настройка в `.env`:
+
+```env
+DEEPSEEK_API_KEY=sk-твой-ключ
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+```
+
+Системный промпт анализирует комментарий и возвращает JSON с полями:
+- `category` — `job_offer | question | collaboration | support | spam | other`
+- `sentiment` — `positive | neutral | negative`
+- `priority` — `low | normal | high | urgent`
+- `summary` — краткое описание на английском
+
+Graceful fallback: если ключ не задан или API недоступен, сервис возвращает значения-заглушки (`ai_available: false`).
 
 ## Настройка email
 

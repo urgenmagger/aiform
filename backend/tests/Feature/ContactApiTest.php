@@ -26,6 +26,7 @@ class ContactApiTest extends TestCase
         parent::setUp();
         Cache::flush(); // Reset cache-based rate limiting between tests.
         Mail::fake(); // Prevent real emails from being sent during tests.
+        Http::fake(); // Prevent real API calls during tests.
     }
 
     public function test_contact_form_submits_successfully(): void
@@ -50,6 +51,33 @@ class ContactApiTest extends TestCase
         $response->assertJsonPath('ai_analysis.priority', 'normal');
         $response->assertJsonPath('ai_analysis.summary', 'AI analysis stub');
         $response->assertJsonPath('ai_analysis.ai_available', false);
+    }
+
+    public function test_contact_form_works_with_real_ai(): void
+    {
+        $mockService = new class extends \App\Services\AiAnalysisService {
+            public function analyze(string $comment): array
+            {
+                return [
+                    'category' => 'question',
+                    'sentiment' => 'positive',
+                    'priority' => 'high',
+                    'summary' => 'Client asks about website development timeline',
+                    'ai_available' => true,
+                ];
+            }
+        };
+
+        $this->app->instance(\App\Services\AiAnalysisService::class, $mockService);
+
+        $response = $this->postJson('/api/contact', $this->validPayload);
+
+        $response->assertStatus(201);
+        $response->assertJsonPath('ai_analysis.category', 'question');
+        $response->assertJsonPath('ai_analysis.sentiment', 'positive');
+        $response->assertJsonPath('ai_analysis.priority', 'high');
+        $response->assertJsonPath('ai_analysis.summary', 'Client asks about website development timeline');
+        $response->assertJsonPath('ai_analysis.ai_available', true);
     }
 
     public function test_contact_form_validates_required_fields(): void
@@ -99,8 +127,6 @@ class ContactApiTest extends TestCase
 
     public function test_contact_form_works_with_ai_fallback(): void
     {
-        Http::fake(); // Simulate unavailable AI provider.
-
         $response = $this->postJson('/api/contact', $this->validPayload);
 
         $response->assertStatus(201);
