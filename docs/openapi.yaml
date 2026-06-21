@@ -6,39 +6,62 @@ info:
 servers:
   - url: http://localhost:8080/api
     description: Local dev
+
 paths:
   /health:
     get:
       summary: Health check
       operationId: healthCheck
+      tags:
+        - Health
       responses:
         "200":
-          description: OK
+          description: Service is healthy
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: ok
+                service: aiform
+                timestamp: "2026-06-21T07:00:00+00:00"
+
   /metrics:
     get:
       summary: Service metrics
       operationId: metrics
+      tags:
+        - Metrics
       responses:
         "200":
-          description: Metrics
+          description: Current metrics
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/MetricsResponse"
+              example:
+                uptime_seconds: 12345
+                php_version: "8.3.31"
+                memory_usage_mb: 4.5
+                contact_requests_total: 42
+
   /contact:
     post:
       summary: Submit contact request
       operationId: submitContact
+      tags:
+        - Contact
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/ContactInput"
+            example:
+              name: "Иван Петров"
+              phone: "+7 (999) 123-45-67"
+              email: "ivan@example.com"
+              comment: "Нужен сайт для бизнеса"
       responses:
         "201":
           description: Contact request accepted
@@ -46,8 +69,52 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ContactResponse"
+              example:
+                success: true
+                message: "Contact request accepted"
+                id: 1
+                ai_analysis:
+                  category: other
+                  sentiment: neutral
+                  priority: normal
+                  summary: "AI analysis stub"
+                  ai_available: false
+                mail_sent: true
         "422":
           description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+              example:
+                message: "The name field is required. (and 3 more errors)"
+                errors:
+                  name:
+                    - "The name field is required."
+                  phone:
+                    - "The phone field is required."
+                  email:
+                    - "The email field must be a valid email address."
+                  comment:
+                    - "The comment field is required."
+        "429":
+          description: Too many requests (rate limit exceeded)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RateLimitErrorResponse"
+              example:
+                success: false
+                message: "Too many contact requests. Please try again later."
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerErrorResponse"
+              example:
+                message: "Server Error"
+
 components:
   schemas:
     HealthResponse:
@@ -61,17 +128,26 @@ components:
           example: aiform
         timestamp:
           type: string
+          format: date-time
+          description: ISO 8601 timestamp
+
     MetricsResponse:
       type: object
       properties:
         uptime_seconds:
           type: integer
+          description: Seconds since server started
         php_version:
           type: string
+          example: "8.3.31"
         memory_usage_mb:
           type: number
+          format: float
+          description: Current memory usage in megabytes
         contact_requests_total:
           type: integer
+          description: Total number of contact requests stored
+
     ContactInput:
       type: object
       required: [name, phone, email, comment]
@@ -79,7 +155,7 @@ components:
         name:
           type: string
           maxLength: 100
-          example: Иван Петров
+          example: "Иван Петров"
         phone:
           type: string
           maxLength: 30
@@ -88,28 +164,91 @@ components:
           type: string
           format: email
           maxLength: 150
+          example: "ivan@example.com"
         comment:
           type: string
           maxLength: 2000
+          example: "Нужен сайт для бизнеса"
+
     ContactResponse:
       type: object
       properties:
+        success:
+          type: boolean
+          example: true
         message:
           type: string
+          example: "Contact request accepted"
         id:
           type: integer
+          description: Created contact request ID
         ai_analysis:
           $ref: "#/components/schemas/AiAnalysis"
+        mail_sent:
+          type: boolean
+          description: Whether notification emails were sent
+
     AiAnalysis:
       type: object
       properties:
         category:
           type: string
+          enum:
+            - job_offer
+            - question
+            - collaboration
+            - support
+            - spam
+            - other
+          example: other
         sentiment:
           type: string
+          enum:
+            - positive
+            - neutral
+            - negative
+          example: neutral
         priority:
           type: string
+          enum:
+            - low
+            - normal
+            - high
+            - urgent
+          example: normal
         summary:
           type: string
+          description: AI-generated summary of the comment
+          example: "AI analysis stub"
         ai_available:
           type: boolean
+          description: Whether AI provider was reachable
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+    RateLimitErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Too many contact requests. Please try again later."
+
+    ServerErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Server Error"

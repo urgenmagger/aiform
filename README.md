@@ -18,7 +18,7 @@ aiform/
 ├── .env.example                # Пример env-переменных
 ├── README.md
 ├── docs/
-│   └── openapi.yaml            # OpenAPI-спецификация (черновик)
+│   └── openapi.yaml            # OpenAPI-спецификация
 ├── backend/                    # Laravel
 │   ├── app/
 │   │   ├── Http/
@@ -166,7 +166,7 @@ done
 - [x] Middleware ContactRateLimitMiddleware (rate limiting для /api/contact)
 - [x] React/Vite frontend с формой (react-hook-form + zod)
 - [x] Docker Compose (Laravel + PostgreSQL + React)
-- [x] OpenAPI-черновик (`docs/openapi.yaml`)
+- [x] OpenAPI-спецификация (`docs/openapi.yaml`)
 
 ## Что осталось реализовать (следующие этапы)
 
@@ -381,6 +381,23 @@ curl -X POST http://localhost:8080/api/contact \
 - Нам важно увидеть полный цикл: запрос → валидация → бизнес-логика → AI → отправка → ответ
 
 </details>
+
+## OpenAPI documentation
+
+OpenAPI 3.0.3 specification: `docs/openapi.yaml`
+
+View in any OpenAPI-compatible tool: Swagger Editor, Swagger UI, Scalar, Redoc.
+
+Paste raw URL into [Swagger Editor](https://editor.swagger.io):
+
+```
+https://raw.githubusercontent.com/urgenmagger/aiform/main/docs/openapi.yaml
+```
+
+Documented endpoints:
+- `POST /api/contact` — request body, 201/422/429/500 responses, ai_analysis schema with enums
+- `GET /api/health` — status, service, timestamp
+- `GET /api/metrics` — uptime, php version, memory, contact requests count
 
 ## Testing
 
