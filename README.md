@@ -13,6 +13,7 @@ curl http://api.urgenmagger.ru/api/health
 # Отправка формы (AI-анализ в ответе)
 curl -X POST http://api.urgenmagger.ru/api/contact \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
   -d '{"name":"Иван","phone":"+79991234567","email":"ivan@example.com","comment":"Нужен интернет-магазин на Laravel"}'
 
 # Rate limit — первые 5 проходят, 6-й возвращает 429
@@ -20,6 +21,7 @@ for i in $(seq 1 6); do
   curl -s -o /dev/null -w "Request $i: %{http_code}\n" \
     -X POST http://api.urgenmagger.ru/api/contact \
     -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
     -d "{\"name\":\"R$i\",\"phone\":\"+7\",\"email\":\"r$i@t.com\",\"comment\":\"test\"}"
 done
 
@@ -187,13 +189,14 @@ npm run dev
 }
 ```
 
-По умолчанию `CONTACT_RATE_LIMIT=5` и `CONTACT_RATE_WINDOW_SECONDS=60`. Первые 5 запросов принимаются, 6-й возвращает 429.
+По умолчанию `CONTACT_RATE_LIMIT=5` и `CONTACT_RATE_WINDOW_SECONDS=60`. Первые 5 запросов принимаются, 6-й возвращает 429. Если до этого уже отправлялись запросы с того же IP, 429 может появиться раньше до истечения окна rate limit.
 
 ```bash
 for i in $(seq 1 6); do
   curl -s -o /dev/null -w "Request $i: %{http_code}\n" \
     -X POST http://api.urgenmagger.ru/api/contact \
     -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
     -d "{\"name\":\"Test $i\",\"phone\":\"+79991234567\",\"email\":\"test$i@example.com\",\"comment\":\"Rate limit test\"}"
 done
 ```
@@ -289,7 +292,7 @@ Graceful fallback: если `AI_ENABLED=false` или `AI_API_KEY` не зада
 }
 ```
 
-AI output валидируется backend-ом — невалидные значения заменяются на fallback по каждому полю отдельно.
+AI output валидируется backend-ом. Если AI недоступен, вернул невалидный JSON или неподдерживаемые значения, сервис использует безопасные fallback-значения.
 
 ## Настройка email
 
@@ -312,7 +315,8 @@ CONTACT_OWNER_EMAIL=owner@example.com
 
 ```bash
 curl -X POST http://localhost:8080/api/contact \
-  -H 'Content-Type: application/json' \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
   -d '{"name":"Тест","phone":"+79991234567","email":"test@example.com","comment":"Тестовое обращение"}'
 ```
 
@@ -350,7 +354,7 @@ API задеплоен на: **http://api.urgenmagger.ru**
 
 ### Инфраструктура
 
-- VPS: 157.22.252.36
+- VPS deployment with Docker Compose production setup
 - Caddy reverse proxy → aiform backend (8080) + статический фронтенд
 - PostgreSQL 16
 - Docker Compose (`docker-compose.prod.yml`)
@@ -379,4 +383,20 @@ docker compose exec backend php vendor/bin/phpunit
 - rate limiting
 - health endpoint
 - metrics endpoint
+
+## Что сделано с помощью AI-инструментов
+
+AI-инструменты использовались для:
+- подготовки черновиков Laravel services/controllers/tests
+- генерации структуры OpenAPI-спецификации
+- подготовки curl-примеров и README-разделов
+- проверки edge cases для валидации, rate limiting и AI fallback
+
+Вручную проверено и доработано:
+- архитектура проекта
+- правила валидации
+- AI output validation и fallback
+- email flow
+- Docker/deployment configuration
+- PHPUnit Feature tests
 
