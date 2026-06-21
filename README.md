@@ -2,7 +2,7 @@
 
 Backend-ориентированное приложение на Laravel + React для приёма контактных обращений с AI-анализом.
 
-## Проверяющему
+## Как тестировать
 
 ### Демо
 
@@ -223,14 +223,8 @@ done
 - [x] React/Vite frontend с формой (react-hook-form + zod)
 - [x] Docker Compose (Laravel + PostgreSQL + React)
 - [x] OpenAPI-спецификация (`docs/openapi.yaml`)
+- [x] Деплой на VPS с Caddy (Docker Compose + reverse proxy)
 
-## Что осталось реализовать (следующие этапы)
-
-- [ ] Swagger UI / Scalar для документации API
-- [ ] Админка (Filament/Nova) для просмотра обращений
-- [ ] Авторизация (Sanctum)
-- [ ] Очереди (Redis + Laravel Horizon) для AI и email
-- [ ] Деплой на VPS (Docker Compose + Caddy/nginx)
 ## AI Integration
 
 AI-анализ комментариев через DeepSeek API (OpenAI-совместимый протокол). Сервис: `app/Services/Ai/ContactAiAnalysisService.php`.
@@ -486,19 +480,13 @@ curl -X POST http://localhost:8080/api/contact \
 
 OpenAPI 3.0.3 specification: `docs/openapi.yaml`
 
-View in any OpenAPI-compatible tool: Swagger Editor, Swagger UI, Scalar, Redoc.
-
-Paste into [Swagger Editor](https://editor.swagger.io):
-
-```
-https://raw.githubusercontent.com/urgenmagger/aiform/main/docs/openapi.yaml
-```
-
-Or view live:
+View live:
 
 ```
 http://api.urgenmagger.ru/docs/openapi.yaml
 ```
+
+Or paste into [Swagger Editor](https://editor.swagger.io).
 
 Documented endpoints:
 - `POST /api/contact` — request body, 201/422/429/500 responses, ai_analysis schema with enums
