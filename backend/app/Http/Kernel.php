@@ -14,5 +14,7 @@ class Kernel extends HttpKernel
         'api' => [],
     ];
 
-    protected $middlewareAliases = [];
+    protected $middlewareAliases = [
+        'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+    ];
 }

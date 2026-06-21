@@ -349,3 +349,25 @@ curl -X POST http://localhost:8080/api/contact \
 - Нам важно увидеть полный цикл: запрос → валидация → бизнес-логика → AI → отправка → ответ
 
 </details>
+
+## Testing
+
+Project uses Laravel Feature tests based on PHPUnit.
+
+Run tests:
+
+```bash
+docker compose exec backend php vendor/bin/phpunit
+```
+
+Covered scenarios:
+
+- successful contact form submission
+- request validation (required fields, invalid email, empty JSON)
+- XSS-like input handling
+- AI graceful fallback
+- email sending with `Mail::fake()`
+- rate limiting
+- health endpoint
+- metrics endpoint
+

@@ -9,5 +9,5 @@ use App\Http\Middleware\ApiRequestLogger;
 Route::middleware([ApiRequestLogger::class])->group(function () {
     Route::get('/health', [HealthController::class, 'check']);
     Route::get('/metrics', [MetricsController::class, 'index']);
-    Route::post('/contact', [ContactController::class, 'store']);
+    Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:contact');
 });
