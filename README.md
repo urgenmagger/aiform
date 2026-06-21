@@ -91,8 +91,12 @@ npm run dev
 | `CONTACT_RATE_LIMIT` | Макс. запросов к /api/contact в окне | 5 |
 | `CONTACT_RATE_WINDOW_SECONDS` | Окно rate limiting в секундах | 60 |
 | `CACHE_DRIVER` | Драйвер кеша (file/database/array) | file |
-| `DEEPSEEK_API_KEY` | Ключ DeepSeek API | — |
-| `DEEPSEEK_BASE_URL` | Базовый URL DeepSeek API | https://api.deepseek.com |
+| `AI_ENABLED` | Включить AI-анализ (true/false) | false |
+| `AI_PROVIDER` | AI-провайдер (deepseek) | deepseek |
+| `AI_API_KEY` | Ключ AI API | — |
+| `AI_BASE_URL` | Базовый URL AI API | https://api.deepseek.com |
+| `AI_MODEL` | Модель AI | deepseek-chat |
+| `AI_TIMEOUT_SECONDS` | Таймаут запроса к AI | 10 |
 
 ## Endpoints
 
@@ -179,22 +183,50 @@ done
 - [ ] Деплой на VPS (Docker Compose + Caddy/nginx)
 ## AI Integration
 
-AI-анализ комментариев через DeepSeek API (`deepseek-chat`).
+AI-анализ комментариев через DeepSeek API (OpenAI-совместимый протокол). Сервис: `app/Services/Ai/ContactAiAnalysisService.php`.
 
 Настройка в `.env`:
 
 ```env
-DEEPSEEK_API_KEY=sk-твой-ключ
-DEEPSEEK_BASE_URL=https://api.deepseek.com
+AI_ENABLED=true
+AI_PROVIDER=deepseek
+AI_API_KEY=sk-твой-ключ
+AI_BASE_URL=https://api.deepseek.com
+AI_MODEL=deepseek-chat
+AI_TIMEOUT_SECONDS=10
 ```
 
 Системный промпт анализирует комментарий и возвращает JSON с полями:
 - `category` — `job_offer | question | collaboration | support | spam | other`
 - `sentiment` — `positive | neutral | negative`
 - `priority` — `low | normal | high | urgent`
-- `summary` — краткое описание на английском
+- `summary` — краткое описание на русском, до 160 символов
 
-Graceful fallback: если ключ не задан или API недоступен, сервис возвращает значения-заглушки (`ai_available: false`).
+Graceful fallback: если `AI_ENABLED=false` или `AI_API_KEY` не задан, сервис возвращает:
+
+```json
+{
+  "category": "other",
+  "sentiment": "neutral",
+  "priority": "normal",
+  "summary": "AI analysis fallback",
+  "ai_available": false
+}
+```
+
+Успешный AI-ответ:
+
+```json
+{
+  "category": "job_offer",
+  "sentiment": "positive",
+  "priority": "normal",
+  "summary": "Пользователь хочет обсудить разработку CRM.",
+  "ai_available": true
+}
+```
+
+AI output валидируется backend-ом — невалидные значения заменяются на fallback по каждому полю отдельно.
 
 ## Настройка email
 

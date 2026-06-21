@@ -3,11 +3,12 @@
 namespace App\Services;
 
 use App\Models\ContactRequest;
+use App\Services\Ai\ContactAiAnalysisService;
 
 class ContactService
 {
     public function __construct(
-        private AiAnalysisService $aiAnalysis,
+        private ContactAiAnalysisService $aiAnalysis,
         private ContactMailService $mailService,
     ) {}
 

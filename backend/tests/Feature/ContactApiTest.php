@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Mail\ContactOwnerMail;
 use App\Mail\ContactUserCopyMail;
+use App\Services\Ai\ContactAiAnalysisService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -49,26 +50,26 @@ class ContactApiTest extends TestCase
         $response->assertJsonPath('ai_analysis.category', 'other');
         $response->assertJsonPath('ai_analysis.sentiment', 'neutral');
         $response->assertJsonPath('ai_analysis.priority', 'normal');
-        $response->assertJsonPath('ai_analysis.summary', 'AI analysis stub');
+        $response->assertJsonPath('ai_analysis.summary', 'AI analysis fallback');
         $response->assertJsonPath('ai_analysis.ai_available', false);
     }
 
     public function test_contact_form_works_with_real_ai(): void
     {
-        $mockService = new class extends \App\Services\AiAnalysisService {
+        $mockService = new class extends ContactAiAnalysisService {
             public function analyze(string $comment): array
             {
                 return [
                     'category' => 'question',
                     'sentiment' => 'positive',
                     'priority' => 'high',
-                    'summary' => 'Client asks about website development timeline',
+                    'summary' => 'Клиент интересуется разработкой интернет-магазина',
                     'ai_available' => true,
                 ];
             }
         };
 
-        $this->app->instance(\App\Services\AiAnalysisService::class, $mockService);
+        $this->app->instance(ContactAiAnalysisService::class, $mockService);
 
         $response = $this->postJson('/api/contact', $this->validPayload);
 
@@ -76,8 +77,62 @@ class ContactApiTest extends TestCase
         $response->assertJsonPath('ai_analysis.category', 'question');
         $response->assertJsonPath('ai_analysis.sentiment', 'positive');
         $response->assertJsonPath('ai_analysis.priority', 'high');
-        $response->assertJsonPath('ai_analysis.summary', 'Client asks about website development timeline');
+        $response->assertJsonPath('ai_analysis.summary', 'Клиент интересуется разработкой интернет-магазина');
         $response->assertJsonPath('ai_analysis.ai_available', true);
+    }
+
+    public function test_contact_form_handles_invalid_ai_json(): void
+    {
+        $mockService = new class extends ContactAiAnalysisService {
+            public function analyze(string $comment): array
+            {
+                return [
+                    'category' => 'other',
+                    'sentiment' => 'neutral',
+                    'priority' => 'normal',
+                    'summary' => 'AI analysis fallback',
+                    'ai_available' => false,
+                ];
+            }
+        };
+
+        $this->app->instance(ContactAiAnalysisService::class, $mockService);
+
+        $response = $this->postJson('/api/contact', $this->validPayload);
+
+        $response->assertStatus(201);
+        $response->assertJsonPath('ai_analysis.ai_available', false);
+        $response->assertJsonPath('ai_analysis.category', 'other');
+        $response->assertJsonPath('ai_analysis.sentiment', 'neutral');
+        $response->assertJsonPath('ai_analysis.priority', 'normal');
+        $response->assertJsonPath('ai_analysis.summary', 'AI analysis fallback');
+    }
+
+    public function test_contact_form_handles_unsupported_ai_values(): void
+    {
+        $mockService = new class extends ContactAiAnalysisService {
+            public function analyze(string $comment): array
+            {
+                return [
+                    'category' => 'other',
+                    'sentiment' => 'neutral',
+                    'priority' => 'normal',
+                    'summary' => 'Client question',
+                    'ai_available' => true,
+                ];
+            }
+        };
+
+        $this->app->instance(ContactAiAnalysisService::class, $mockService);
+
+        $response = $this->postJson('/api/contact', $this->validPayload);
+
+        $response->assertStatus(201);
+        $response->assertJsonPath('ai_analysis.ai_available', true);
+        $response->assertJsonPath('ai_analysis.category', 'other');
+        $response->assertJsonPath('ai_analysis.sentiment', 'neutral');
+        $response->assertJsonPath('ai_analysis.priority', 'normal');
+        $response->assertJsonPath('ai_analysis.summary', 'Client question');
     }
 
     public function test_contact_form_validates_required_fields(): void

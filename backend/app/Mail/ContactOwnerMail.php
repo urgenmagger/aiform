@@ -14,6 +14,7 @@ class ContactOwnerMail extends Mailable
     public function build(): self
     {
         $c = $this->contact;
+        $aiAvailable = $c->ai_available ? 'да' : 'нет';
 
         return $this
             ->subject('Новое обращение — ' . $c->name)
@@ -28,7 +29,14 @@ class ContactOwnerMail extends Mailable
                 <tr><td><strong>IP:</strong></td><td>{$c->ip_address}</td></tr>
             </table>
             <hr>
-            <p>AI-анализ: {$c->ai_summary} (категория: {$c->ai_category}, тональность: {$c->ai_sentiment})</p>
+            <h3>AI-анализ</h3>
+            <table>
+                <tr><td><strong>Категория:</strong></td><td>{$c->ai_category}</td></tr>
+                <tr><td><strong>Тональность:</strong></td><td>{$c->ai_sentiment}</td></tr>
+                <tr><td><strong>Приоритет:</strong></td><td>{$c->ai_priority}</td></tr>
+                <tr><td><strong>Резюме:</strong></td><td>{$c->ai_summary}</td></tr>
+                <tr><td><strong>AI доступен:</strong></td><td>{$aiAvailable}</td></tr>
+            </table>
             HTML);
     }
 }

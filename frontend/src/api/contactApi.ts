@@ -1,8 +1,8 @@
-import type { ContactPayload } from '../types/contact';
+import type { ContactPayload, ContactResponse } from '../types/contact';
 
 const BASE = '/api';
 
-export async function submitContact(payload: ContactPayload): Promise<{ message: string }> {
+export async function submitContact(payload: ContactPayload): Promise<ContactResponse> {
   const res = await fetch(`${BASE}/contact`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -12,7 +12,7 @@ export async function submitContact(payload: ContactPayload): Promise<{ message:
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    throw new Error(data.message || data.error || 'Failed to send message');
+    throw new Error(data.message || 'Ошибка отправки');
   }
 
   return data;
