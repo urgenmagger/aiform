@@ -449,6 +449,47 @@ Documented endpoints:
 - `GET /api/health` — status, service, timestamp
 - `GET /api/metrics` — uptime, php version, memory, contact requests count
 
+## Deployment
+
+Production API:
+
+```
+http://api.urgenmagger.ru
+```
+
+HTTPS will be enabled once DNS A-record `api.urgenmagger.ru → 157.22.252.36` is configured.
+
+Health check:
+
+```bash
+curl http://api.urgenmagger.ru/api/health
+```
+
+Metrics:
+
+```bash
+curl http://api.urgenmagger.ru/api/metrics
+```
+
+Contact request:
+
+```bash
+curl -X POST http://api.urgenmagger.ru/api/contact \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Ivan","phone":"+79991234567","email":"ivan@example.com","comment":"Hello"}'
+```
+
+OpenAPI:
+
+```
+http://api.urgenmagger.ru/docs/openapi.yaml
+```
+
+Infrastructure:
+- Caddy reverse proxy (80/443) → aiform backend (8080), sfera (8081)
+- PostgreSQL 16
+- Docker Compose prod stack (`docker-compose.prod.yml`)
+
 ## Testing
 
 Project uses Laravel Feature tests based on PHPUnit.

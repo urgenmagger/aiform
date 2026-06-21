@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-aiform}
+      POSTGRES_USER: ${DB_USERNAME:-aiform}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    ports:
+      - '${APP_PORT:-8080}:8000'
+    env_file:
+      - .env.prod
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend/storage:/var/www/html/storage
+      - ./backend/.env.prod:/var/www/html/.env:ro
+      - ./docs/openapi.yaml:/var/www/html/public/docs/openapi.yaml:ro
+    restart: unless-stopped
+
+volumes:
+  pgdata:
