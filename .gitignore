@@ -1,7 +1,13 @@
 .env
+.env.*
 .DS_Store
+AGENTS.md
 backend/vendor
 backend/bootstrap/cache/*.php
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
 frontend/node_modules
 frontend/dist
 pgdata
+*.log
