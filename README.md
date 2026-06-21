@@ -2,52 +2,43 @@
 
 Backend-ориентированное приложение на Laravel + React для приёма контактных обращений с AI-анализом.
 
-## Как тестировать
+## Quick test
 
-### Демо
-Открыть в браузере и заполнить форму:
-
-**[api.urgenmagger.ru](http://api.urgenmagger.ru)**
-
-После отправки под формой появится карточка с AI-анализом (категория, тональность, приоритет, summary).
-
-### API (curl)
+Live demo (frontend + API): **[api.urgenmagger.ru](http://api.urgenmagger.ru)**
 
 ```bash
 # Health check
 curl http://api.urgenmagger.ru/api/health
 
-# Отправка формы (посмотреть AI-анализ в ответе)
+# Send contact form (see AI analysis in response)
 curl -X POST http://api.urgenmagger.ru/api/contact \
   -H "Content-Type: application/json" \
-  -d '{"name":"Иван","phone":"+79991234567","email":"ivan@example.com","comment":"Хочу интернет-магазин на Laravel"}'
+  -d '{"name":"Ivan","phone":"+79991234567","email":"ivan@example.com","comment":"Need an online store on Laravel"}'
 
-# Rate limit (первые 10 пройдут, потом 429)
-for i in 1 2 3 4 5; do
-  curl -s -o /dev/null -w "req $i: %{http_code}\n" \
+# Rate limit — first 5 pass, 6th returns 429
+for i in $(seq 1 6); do
+  curl -s -o /dev/null -w "Request $i: %{http_code}\n" \
     -X POST http://api.urgenmagger.ru/api/contact \
     -H "Content-Type: application/json" \
-    -d "{\"name\":\"T$i\",\"phone\":\"+7\",\"email\":\"t$i@t.com\",\"comment\":\"test\"}"
+    -d "{\"name\":\"R$i\",\"phone\":\"+7\",\"email\":\"r$i@t.com\",\"comment\":\"test\"}"
 done
 
-# OpenAPI
-curl http://api.urgenmagger.ru/docs/openapi.yaml
-# Открыть в Swagger Editor: https://editor.swagger.io
+# OpenAPI spec
+curl http://api.urgenmagger.ru/docs/openapi.yaml   # Paste into https://editor.swagger.io
 ```
 
-### Что оценить
+### What to check
 
-| Компонент | Где смотреть |
+| Component | How |
 |---|---|
-| Форма + AI | [api.urgenmagger.ru](http://api.urgenmagger.ru) — отправить обращение |
-| Валидация | Оставить пустые поля, невалидный email → 422 |
-| Rate limiting | 10 запросов подряд → 429 |
-| AI graceful fallback | `AI_ENABLED=false` в `.env` → `ai_available: false` |
-| Email-отправка | После отправки письмо владельцу + копия пользователю |
-| OpenAPI-документация | [openapi.yaml](http://api.urgenmagger.ru/docs/openapi.yaml) |
-| Тесты | `docker compose exec backend php vendor/bin/phpunit` (13 тестов) |
-| Логирование | `docker compose exec backend cat storage/logs/laravel.log` |
-| Код и архитектура | `backend/app/` — Controllers → Services → Models |
+| Form + AI | Open [api.urgenmagger.ru](http://api.urgenmagger.ru), fill and submit |
+| Validation | Empty fields, invalid email → 422 |
+| Rate limiting | 5 requests → 429 on 6th (env: `CONTACT_RATE_LIMIT=5`) |
+| AI graceful fallback | `AI_ENABLED=false` in `.env` → `ai_available: false` |
+| OpenAPI docs | [openapi.yaml](http://api.urgenmagger.ru/docs/openapi.yaml) |
+| Tests | `docker compose exec backend php vendor/bin/phpunit` (13 tests) |
+| Request logs | `docker compose exec backend cat storage/logs/laravel.log` |
+| Code & architecture | `backend/app/` — Controllers → Services → Models |
 
 ## Стек
 
@@ -174,7 +165,7 @@ npm run dev
     "category": "other",
     "sentiment": "neutral",
     "priority": "normal",
-    "summary": "AI analysis stub",
+    "summary": "AI analysis fallback",
     "ai_available": false
   },
   "mail_sent": true
@@ -196,31 +187,50 @@ npm run dev
 }
 ```
 
-Проверка через curl:
+By default `CONTACT_RATE_LIMIT=5` and `CONTACT_RATE_WINDOW_SECONDS=60`. The first 5 requests are accepted, the 6th returns 429.
 
 ```bash
 for i in $(seq 1 6); do
   curl -s -o /dev/null -w "Request $i: %{http_code}\n" \
-    -X POST http://localhost:8080/api/contact \
+    -X POST http://api.urgenmagger.ru/api/contact \
     -H "Content-Type: application/json" \
-    -d '{"name":"Test","phone":"+79991234567","email":"test@test.com","comment":"Rate limit test"}'
+    -d "{\"name\":\"Test $i\",\"phone\":\"+79991234567\",\"email\":\"test$i@example.com\",\"comment\":\"Rate limit test\"}"
 done
 ```
 
-## Что уже сделано
+## CORS
 
-- [x] Структура Laravel (Controllers, Services, Middleware, Requests, Model)
-- [x] Routes: `/api/health`, `/api/metrics`, `/api/contact`
-- [x] Валидация ContactFormRequest (name, phone, email, comment)
-- [x] Сохранение обращений в PostgreSQL (миграция `contact_requests`)
-- [x] AiAnalysisService с DeepSeek API (category, sentiment, priority, summary)
-- [x] Реальная email-отправка (ContactOwnerMail, ContactUserCopyMail)
-- [x] Middleware ApiRequestLogger (логирует method, path, status, ip, duration)
-- [x] Middleware ContactRateLimitMiddleware (rate limiting для /api/contact)
-- [x] React/Vite frontend с формой (react-hook-form + zod)
+CORS is configured for API routes and controlled through environment variables.
+
+```env
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://api.urgenmagger.ru
+```
+
+Preflight check:
+
+```bash
+curl -i -X OPTIONS http://api.urgenmagger.ru/api/contact \
+  -H "Origin: http://localhost:5173" \
+  -H "Access-Control-Request-Method: POST" \
+  -H "Access-Control-Request-Headers: Content-Type, Accept"
+```
+
+Unknown origins do not receive `Access-Control-Allow-Origin`, so browser requests from them are blocked.
+
+## What's done
+
+- [x] Laravel API structure (Controllers, Services, Middleware, Requests, Model)
+- [x] Validation (ContactFormRequest)
+- [x] PostgreSQL storage (migration `contact_requests`)
+- [x] AI analysis with DeepSeek API, graceful fallback
+- [x] Email notifications (ContactOwnerMail, ContactUserCopyMail)
+- [x] Request logging (ApiRequestLogger middleware)
+- [x] Rate limiting (ContactRateLimitMiddleware)
+- [x] React/Vite frontend with react-hook-form + zod
 - [x] Docker Compose (Laravel + PostgreSQL + React)
-- [x] OpenAPI-спецификация (`docs/openapi.yaml`)
-- [x] Деплой на VPS с Caddy (Docker Compose + reverse proxy)
+- [x] OpenAPI documentation (`docs/openapi.yaml`)
+- [x] PHPUnit Feature tests (13 tests)
+- [x] VPS deployment with Caddy reverse proxy
 
 ## Хранение данных
 
@@ -324,10 +334,9 @@ curl -X POST http://localhost:8080/api/contact \
 - `mail_sent: false` в ответе — email не ушёл, но contact сохранён
 - HTTP-статус: 201 (успех) в любом случае
 
-### Локальная разработка (без SMTP)
+### Local / demo mode (without SMTP)
 
-По умолчанию `MAIL_MAILER=log` — письма пишутся в `storage/logs/laravel.log` вместо реальной отправки.
-Для проверки логики без SMTP-сервера этого достаточно.
+By default `MAIL_MAILER=log` is used — emails are written to `storage/logs/laravel.log` instead of being sent through SMTP. Set `MAIL_MAILER=smtp` and fill in SMTP credentials to enable real email delivery.
 
 ---
 
@@ -484,50 +493,25 @@ curl -X POST http://localhost:8080/api/contact \
 - Нам важно увидеть полный цикл: запрос → валидация → бизнес-логика → AI → отправка → ответ
 
 </details>
-
 ## OpenAPI documentation
 
-OpenAPI 3.0.3 specification: `docs/openapi.yaml`
+OpenAPI 3.0.3 spec: **[openapi.yaml](http://api.urgenmagger.ru/docs/openapi.yaml)**
 
-View live:
+Paste the URL into [Swagger Editor](https://editor.swagger.io) to browse the full schema with examples.
 
-```
-http://api.urgenmagger.ru/docs/openapi.yaml
-```
-
-Or paste into [Swagger Editor](https://editor.swagger.io).
-
-Documented endpoints:
-- `POST /api/contact` — request body, 201/422/429/500 responses, ai_analysis schema with enums
-- `GET /api/health` — status, service, timestamp
-- `GET /api/metrics` — uptime, php version, memory, contact requests count
-
-## Demo
-Working deployment: **[api.urgenmagger.ru](http://api.urgenmagger.ru)**
-### API endpoints
-
-```bash
-# Health
-curl http://api.urgenmagger.ru/api/health
-
-# Metrics
-curl http://api.urgenmagger.ru/api/metrics
-
-# Contact form
-curl -X POST http://api.urgenmagger.ru/api/contact \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Ivan","phone":"+79991234567","email":"ivan@example.com","comment":"Hello"}'
-
-# OpenAPI spec
-curl http://api.urgenmagger.ru/docs/openapi.yaml
-```
+## Deployment
+API is deployed at: **[api.urgenmagger.ru](http://api.urgenmagger.ru)**
 
 ### Infrastructure
 
 - VPS: 157.22.252.36
-- Caddy reverse proxy → aiform backend (8080)
+- Caddy reverse proxy → aiform backend (8080) + static frontend
 - PostgreSQL 16
 - Docker Compose (`docker-compose.prod.yml`)
+
+### HTTPS note
+
+Current deployment is available over HTTP. HTTPS is planned after direct DNS routing to the VPS or SSL termination on the hosting provider side is completed. The application itself is ready to run behind a reverse proxy.
 
 ## Testing
 
