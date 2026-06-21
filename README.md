@@ -438,10 +438,16 @@ OpenAPI 3.0.3 specification: `docs/openapi.yaml`
 
 View in any OpenAPI-compatible tool: Swagger Editor, Swagger UI, Scalar, Redoc.
 
-Paste raw URL into [Swagger Editor](https://editor.swagger.io):
+Paste into [Swagger Editor](https://editor.swagger.io):
 
 ```
 https://raw.githubusercontent.com/urgenmagger/aiform/main/docs/openapi.yaml
+```
+
+Or view live:
+
+```
+http://api.urgenmagger.ru/docs/openapi.yaml
 ```
 
 Documented endpoints:
@@ -449,46 +455,38 @@ Documented endpoints:
 - `GET /api/health` — status, service, timestamp
 - `GET /api/metrics` — uptime, php version, memory, contact requests count
 
-## Deployment
+## Demo
 
-Production API:
+Working deployment:
 
 ```
 http://api.urgenmagger.ru
 ```
 
-HTTPS will be enabled once DNS A-record `api.urgenmagger.ru → 157.22.252.36` is configured.
-
-Health check:
+### API endpoints
 
 ```bash
+# Health
 curl http://api.urgenmagger.ru/api/health
-```
 
-Metrics:
-
-```bash
+# Metrics
 curl http://api.urgenmagger.ru/api/metrics
-```
 
-Contact request:
-
-```bash
+# Contact form
 curl -X POST http://api.urgenmagger.ru/api/contact \
   -H "Content-Type: application/json" \
   -d '{"name":"Ivan","phone":"+79991234567","email":"ivan@example.com","comment":"Hello"}'
+
+# OpenAPI spec
+curl http://api.urgenmagger.ru/docs/openapi.yaml
 ```
 
-OpenAPI:
+### Infrastructure
 
-```
-http://api.urgenmagger.ru/docs/openapi.yaml
-```
-
-Infrastructure:
-- Caddy reverse proxy (80/443) → aiform backend (8080), sfera (8081)
+- VPS: 157.22.252.36
+- Caddy reverse proxy → aiform backend (8080)
 - PostgreSQL 16
-- Docker Compose prod stack (`docker-compose.prod.yml`)
+- Docker Compose (`docker-compose.prod.yml`)
 
 ## Testing
 
