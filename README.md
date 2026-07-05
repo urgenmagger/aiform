@@ -4,14 +4,14 @@ Backend-ориентированное приложение на Laravel + React
 
 ## Быстрая проверка
 
-Демо (фронтенд + API): **http://api.urgenmagger.ru**
+Демо (фронтенд + API): **https://api.urgenmagger.ru**
 
 ```bash
 # Проверка здоровья
-curl http://api.urgenmagger.ru/api/health
+curl https://api.urgenmagger.ru/api/health
 
 # Отправка формы (AI-анализ в ответе)
-curl -X POST http://api.urgenmagger.ru/api/contact \
+curl -X POST https://api.urgenmagger.ru/api/contact \
   -H "Content-Type: application/json" \
   -H "Accept: application/json" \
   -d '{"name":"Иван","phone":"+79991234567","email":"ivan@example.com","comment":"Нужен интернет-магазин на Laravel"}'
@@ -19,25 +19,25 @@ curl -X POST http://api.urgenmagger.ru/api/contact \
 # Rate limit — первые 5 проходят, 6-й возвращает 429
 for i in $(seq 1 6); do
   curl -s -o /dev/null -w "Request $i: %{http_code}\n" \
-    -X POST http://api.urgenmagger.ru/api/contact \
+    -X POST https://api.urgenmagger.ru/api/contact \
     -H "Content-Type: application/json" \
     -H "Accept: application/json" \
     -d "{\"name\":\"R$i\",\"phone\":\"+7\",\"email\":\"r$i@t.com\",\"comment\":\"test\"}"
 done
 
 # OpenAPI-спецификация
-curl http://api.urgenmagger.ru/docs/openapi.yaml   # Вставить в https://editor.swagger.io
+curl https://api.urgenmagger.ru/docs/openapi.yaml   # Вставить в https://editor.swagger.io
 ```
 
 ### Что проверять
 
 | Компонент | Как |
 |---|---|
-| Форма + AI | Открыть http://api.urgenmagger.ru, заполнить и отправить |
+| Форма + AI | Открыть https://api.urgenmagger.ru, заполнить и отправить |
 | Валидация | Пустые поля, невалидный email → 422 |
 | Rate limiting | 5 запросов → 429 на 6-м (`CONTACT_RATE_LIMIT=5`) |
 | AI graceful fallback | `AI_ENABLED=false` в `.env` → `ai_available: false` |
-| OpenAPI-документация | [openapi.yaml](http://api.urgenmagger.ru/docs/openapi.yaml) |
+| OpenAPI-документация | [openapi.yaml](https://api.urgenmagger.ru/docs/openapi.yaml) |
 | Тесты | `docker compose exec backend php vendor/bin/phpunit` (13 тестов) |
 | Логи запросов | `docker compose exec backend cat storage/logs/laravel.log` |
 | Код и архитектура | `backend/app/` — Controllers → Services → Models |
@@ -194,7 +194,7 @@ npm run dev
 ```bash
 for i in $(seq 1 6); do
   curl -s -o /dev/null -w "Request $i: %{http_code}\n" \
-    -X POST http://api.urgenmagger.ru/api/contact \
+    -X POST https://api.urgenmagger.ru/api/contact \
     -H "Content-Type: application/json" \
     -H "Accept: application/json" \
     -d "{\"name\":\"Test $i\",\"phone\":\"+79991234567\",\"email\":\"test$i@example.com\",\"comment\":\"Rate limit test\"}"
@@ -206,13 +206,13 @@ done
 CORS настроен для API-маршрутов и управляется через переменные окружения.
 
 ```env
-CORS_ALLOWED_ORIGINS=http://localhost:5173,http://api.urgenmagger.ru
+CORS_ALLOWED_ORIGINS=http://localhost:5173,https://api.urgenmagger.ru
 ```
 
 Preflight-проверка:
 
 ```bash
-curl -i -X OPTIONS http://api.urgenmagger.ru/api/contact \
+curl -i -X OPTIONS https://api.urgenmagger.ru/api/contact \
   -H "Origin: http://localhost:5173" \
   -H "Access-Control-Request-Method: POST" \
   -H "Access-Control-Request-Headers: Content-Type, Accept"
@@ -344,13 +344,13 @@ curl -X POST http://localhost:8080/api/contact \
 
 ## OpenAPI-документация
 
-Спецификация OpenAPI 3.0.3: **[openapi.yaml](http://api.urgenmagger.ru/docs/openapi.yaml)**
+Спецификация OpenAPI 3.0.3: **[openapi.yaml](https://api.urgenmagger.ru/docs/openapi.yaml)**
 
 Вставьте URL в [Swagger Editor](https://editor.swagger.io) для просмотра полной схемы с примерами.
 
 ## Деплой
 
-API задеплоен на: **http://api.urgenmagger.ru**
+API задеплоен на: **https://api.urgenmagger.ru**
 
 ### Инфраструктура
 
@@ -361,7 +361,7 @@ API задеплоен на: **http://api.urgenmagger.ru**
 
 ### Примечание про HTTPS
 
-Текущий деплой работает по HTTP. HTTPS планируется после прямой DNS-маршрутизации на VPS или настройки SSL на стороне хостинг-провайдера. Само приложение готово работать за reverse proxy.
+Caddy автоматически получает SSL-сертификаты через Let's Encrypt. HTTP-запросы редиректятся на HTTPS (308 Permanent Redirect).
 
 ## Тестирование
 

@@ -4,7 +4,7 @@ info:
   description: API for contact form submissions with AI analysis
   version: "0.1.0"
 servers:
-  - url: http://api.urgenmagger.ru/api
+  - url: https://api.urgenmagger.ru/api
     description: Live deployment
   - url: http://localhost:8080/api
     description: Local dev
